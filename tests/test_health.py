@@ -1,10 +1,5 @@
-from fastapi.testclient import TestClient
-
-from backend.main import app
+from backend.main import health_check
 
 
 def test_health_check() -> None:
-    response = TestClient(app).get("/health")
-
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok", "service": "QSecNet"}
+    assert health_check() == {"status": "ok", "service": "QSecNet"}

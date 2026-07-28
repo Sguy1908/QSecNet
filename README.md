@@ -9,6 +9,7 @@ security recommendations through a typed FastAPI service and web dashboard.
 
 - FastAPI service with OpenAPI documentation at `/docs`
 - Configurable runtime settings and health endpoint
+- Topology builder API with NetworkX graph validation and SQLite persistence
 - Foundation for topology, simulation, attacks, analysis, reports, and IBM
   Quantum Runtime comparison
 - Automated linting and tests in GitHub Actions
@@ -31,8 +32,7 @@ Open `http://localhost:8000/docs` and run `pytest` to verify the installation.
 
 ## Roadmap
 
-1. Network topology persistence and builder APIs
-2. BB84 simulation and attack models
+1. BB84 simulation and attack models
 3. Security analysis, recommendations, exports, and reports
 4. React dashboard and IBM Quantum Runtime comparison
 
