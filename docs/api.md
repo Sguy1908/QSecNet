@@ -9,7 +9,9 @@ is running. All application endpoints are prefixed with `/api/v1`.
 | `GET` | `/topologies` | List stored network designs |
 | `GET` | `/topologies/{id}` | Retrieve one design |
 | `POST` | `/simulations/bb84` | Execute BB84 with optional attacks |
+| `POST` | `/attacks/preview` | Preview composable attacks against a topology |
 | `POST` | `/security/analyze` | Calculate security posture and recommendations |
+| `POST` | `/recommendations` | Get ranked remediation guidance |
 | `POST` | `/reports` | Store an immutable security report |
 | `GET` | `/reports/{id}/export/json` | Download a report as JSON |
 | `GET` | `/reports/{id}/export/csv` | Download a report as CSV |
