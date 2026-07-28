@@ -10,6 +10,8 @@ security recommendations through a typed FastAPI service and web dashboard.
 - FastAPI service with OpenAPI documentation at `/docs`
 - Configurable runtime settings and health endpoint
 - Topology builder API with NetworkX graph validation and SQLite persistence
+- Reproducible BB84 protocol simulation with intercept-resend, channel-noise,
+  photon-loss, node-failure, and link-failure attack models
 - Foundation for topology, simulation, attacks, analysis, reports, and IBM
   Quantum Runtime comparison
 - Automated linting and tests in GitHub Actions
