@@ -36,6 +36,7 @@ class QuantumLink(BaseModel):
     fidelity: float = Field(default=0.98, ge=0.0, le=1.0)
     loss_probability: float = Field(default=0.02, ge=0.0, le=1.0)
     decoherence_time_us: float = Field(default=100.0, gt=0.0)
+    noise_level: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 class TopologyCreate(BaseModel):
@@ -70,6 +71,10 @@ class TopologyRead(TopologyCreate):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class TopologyUpdate(TopologyCreate):
+    """Full replacement representation for a saved topology."""
 
 
 def serialize_topology(topology: Topology) -> TopologyRead:
@@ -124,3 +129,36 @@ def get_topology(
     if topology is None:
         raise HTTPException(status_code=404, detail="Topology not found")
     return serialize_topology(topology)
+
+
+@router.put("/{topology_id}", response_model=TopologyRead)
+def update_topology(
+    topology_id: str,
+    payload: TopologyUpdate,
+    session: Session = Depends(get_session),
+) -> TopologyRead:
+    """Replace a topology after applying the same graph validation as creation."""
+    topology = session.get(Topology, topology_id)
+    if topology is None:
+        raise HTTPException(status_code=404, detail="Topology not found")
+    topology.name = payload.name
+    topology.description = payload.description
+    topology.nodes = [node.model_dump() for node in payload.nodes]
+    topology.links = [link.model_dump() for link in payload.links]
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="A topology with this name exists") from exc
+    session.refresh(topology)
+    return serialize_topology(topology)
+
+
+@router.delete("/{topology_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_topology(topology_id: str, session: Session = Depends(get_session)) -> None:
+    """Delete a saved topology."""
+    topology = session.get(Topology, topology_id)
+    if topology is None:
+        raise HTTPException(status_code=404, detail="Topology not found")
+    session.delete(topology)
+    session.commit()
