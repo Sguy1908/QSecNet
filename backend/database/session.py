@@ -33,6 +33,11 @@ def get_session() -> Generator[Session, None, None]:
 
 def initialize_database() -> None:
     """Create tables for the local deployment."""
-    from backend.models.topology import Topology  # noqa: F401
+    from backend.models.topology import (  # noqa: F401
+        AnalysisRecord,
+        SecurityReport,
+        SimulationRecord,
+        Topology,
+    )
 
     Base.metadata.create_all(engine)

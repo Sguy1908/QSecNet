@@ -3,10 +3,13 @@
 from enum import StrEnum
 from random import Random
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
+from sqlalchemy.orm import Session
 
 from backend.attacks.factory import build_attack
+from backend.database.session import get_session
+from backend.models.topology import SimulationRecord
 from backend.simulator.bb84 import BB84Result, simulate_bb84
 
 router = APIRouter(prefix="/simulations", tags=["simulations"])
@@ -42,9 +45,11 @@ class SimulationRequest(BaseModel):
     rounds: int = Field(default=1024, ge=16, le=1_000_000)
     seed: int | None = None
     attacks: list[AttackRequest] = Field(default_factory=list)
+    topology_id: str | None = None
 
 
 class SimulationResponse(BaseModel):
+    id: str | None = None
     shared_key: str
     key_length: int
     qber: float
@@ -87,9 +92,20 @@ def derive_result(result: BB84Result, request: SimulationRequest) -> SimulationR
 
 
 @router.post("/bb84", response_model=SimulationResponse)
-def run_bb84(payload: SimulationRequest) -> SimulationResponse:
+def run_bb84(
+    payload: SimulationRequest, session: Session = Depends(get_session)
+) -> SimulationResponse:
     """Execute an ideal BB84 run and apply configured adversarial conditions."""
     try:
-        return derive_result(simulate_bb84(payload.rounds, payload.seed), payload)
+        response = derive_result(simulate_bb84(payload.rounds, payload.seed), payload)
+        record = SimulationRecord(
+            topology_id=payload.topology_id,
+            request=payload.model_dump(mode="json"),
+            result=response.model_dump(mode="json"),
+        )
+        session.add(record)
+        session.commit()
+        session.refresh(record)
+        return response.model_copy(update={"id": record.id})
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
