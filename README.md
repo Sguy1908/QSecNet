@@ -24,6 +24,8 @@ security recommendations through a typed FastAPI service and web dashboard.
 React dashboard -> FastAPI API -> domain services -> SQLite / Qiskit / IBM Runtime
 ```
 
+See the detailed [architecture](docs/architecture.md) and [API guide](docs/api.md).
+
 ## Quick start
 
 ```bash
