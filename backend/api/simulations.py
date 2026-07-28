@@ -1,6 +1,7 @@
 """BB84 simulation and attack analysis endpoints."""
 
 from enum import StrEnum
+from math import log2
 from random import Random
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -59,6 +60,9 @@ class SimulationResponse(BaseModel):
     attacks: list[str]
     affected_nodes: list[str]
     affected_links: list[tuple[str, str]]
+    raw_key_bits: str
+    sifted_key: str
+    estimated_secure_key_rate: float
 
 
 def derive_result(result: BB84Result, request: SimulationRequest) -> SimulationResponse:
@@ -78,16 +82,22 @@ def derive_result(result: BB84Result, request: SimulationRequest) -> SimulationR
     errors = sum(transcript.alice_bits[i] != transcript.bob_bits[i] for i in matched)
     sifted = len(matched)
     key = "".join(str(transcript.alice_bits[i]) for i in matched)
+    qber = errors / sifted if sifted else 0.0
+    entropy = -qber * log2(qber) - (1 - qber) * log2(1 - qber) if 0 < qber < 1 else 0.0
+    secure_rate = max(0.0, sifted * delivery * (1 - 2 * entropy))
     return SimulationResponse(
         shared_key=key,
         key_length=int(sifted * delivery),
-        qber=errors / sifted if sifted else 0.0,
+        qber=qber,
         success_probability=(sifted / len(transcript.alice_bits)) * delivery,
         sifted_bits=sifted,
         delivery_probability=delivery,
         attacks=[attack.kind.value for attack in request.attacks],
         affected_nodes=nodes,
         affected_links=links,
+        raw_key_bits="".join(str(bit) for bit in transcript.alice_bits),
+        sifted_key=key,
+        estimated_secure_key_rate=round(secure_rate, 4),
     )
 
 

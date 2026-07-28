@@ -31,3 +31,6 @@ def test_photon_loss_reduces_key_length() -> None:
 
     assert result.delivery_probability < 0.6
     assert result.key_length < result.sifted_bits
+    assert len(result.raw_key_bits) == payload.rounds
+    assert result.sifted_key
+    assert result.estimated_secure_key_rate >= 0

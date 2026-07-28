@@ -28,6 +28,10 @@ Example BB84 request:
 
 `channel_noise` and `photon_loss` require a `probability` in `[0, 1]`.
 `node_failure` requires `node_id`; `link_failure` requires `source` and `target`.
+The BB84 response includes `raw_key_bits`, `sifted_key`, QBER, delivery and
+success probabilities, and `estimated_secure_key_rate`. The rate uses the
+asymptotic BB84 entropy bound and should be treated as an estimate, not a
+replacement for finite-key security analysis.
 
 ## IBM Quantum Runtime
 
