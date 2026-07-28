@@ -39,6 +39,12 @@ Open `http://localhost:8000/docs` and run `pytest` to verify the installation.
 For the dashboard, run `cd frontend && npm install && npm run dev`. It expects the
 API at `http://localhost:8000/api/v1`; override this with `VITE_API_URL`.
 
+### Optional IBM Quantum Runtime
+
+Set `QSECNET_IBM_QUANTUM_TOKEN` (and optionally `QSECNET_IBM_QUANTUM_INSTANCE`)
+to enable `/api/v1/ibm/compare`. Without these values, QSecNet safely performs
+only the local Qiskit Aer comparison.
+
 ## Roadmap
 
 1. BB84 simulation and attack models

@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./qsecnet.db"
     api_prefix: str = "/api/v1"
     cors_origins: list[str] = ["http://localhost:5173"]
+    ibm_quantum_token: str | None = None
+    ibm_quantum_instance: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="QSECNET_")
 
