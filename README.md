@@ -12,6 +12,8 @@ security recommendations through a typed FastAPI service and web dashboard.
 - Topology builder API with NetworkX graph validation and SQLite persistence
 - Reproducible BB84 protocol simulation with intercept-resend, channel-noise,
   photon-loss, node-failure, and link-failure attack models
+- Security scoring for QBER, fidelity, reliability, connectivity, weak links,
+  key-rate estimates, risk levels, and prioritized remediation advice
 - Foundation for topology, simulation, attacks, analysis, reports, and IBM
   Quantum Runtime comparison
 - Automated linting and tests in GitHub Actions
