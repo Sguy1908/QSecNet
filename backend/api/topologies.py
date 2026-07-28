@@ -4,8 +4,8 @@ from datetime import datetime
 from enum import StrEnum
 
 import networkx as nx
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, model_validator
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -35,7 +35,12 @@ class QuantumLink(BaseModel):
     target: str
     fidelity: float = Field(default=0.98, ge=0.0, le=1.0)
     loss_probability: float = Field(default=0.02, ge=0.0, le=1.0)
-    decoherence_time_us: float = Field(default=100.0, gt=0.0)
+    decoherence_time: float = Field(
+        default=100.0,
+        gt=0.0,
+        validation_alias=AliasChoices("decoherence_time", "decoherence_time_us"),
+    )
+    noise_level: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 class TopologyCreate(BaseModel):
@@ -70,6 +75,13 @@ class TopologyRead(TopologyCreate):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class TopologyValidationResponse(BaseModel):
+    valid: bool
+    node_count: int
+    link_count: int
+    connected: bool
 
 
 def serialize_topology(topology: Topology) -> TopologyRead:
@@ -108,6 +120,20 @@ def create_topology(
     return serialize_topology(topology)
 
 
+@router.post("/validate", response_model=TopologyValidationResponse)
+def validate_topology(payload: TopologyCreate) -> TopologyValidationResponse:
+    """Validate graph invariants for a topology payload without persisting."""
+    graph = nx.Graph()
+    graph.add_nodes_from(node.id for node in payload.nodes)
+    graph.add_edges_from((link.source, link.target) for link in payload.links)
+    return TopologyValidationResponse(
+        valid=True,
+        node_count=len(payload.nodes),
+        link_count=len(payload.links),
+        connected=nx.is_connected(graph),
+    )
+
+
 @router.get("", response_model=list[TopologyRead])
 def list_topologies(session: Session = Depends(get_session)) -> list[TopologyRead]:
     """List saved topologies in creation order."""
@@ -124,3 +150,39 @@ def get_topology(
     if topology is None:
         raise HTTPException(status_code=404, detail="Topology not found")
     return serialize_topology(topology)
+
+
+@router.put("/{topology_id}", response_model=TopologyRead)
+def update_topology(
+    topology_id: str,
+    payload: TopologyCreate,
+    session: Session = Depends(get_session),
+) -> TopologyRead:
+    """Replace an existing topology with a newly validated configuration."""
+    topology = session.get(Topology, topology_id)
+    if topology is None:
+        raise HTTPException(status_code=404, detail="Topology not found")
+    topology.name = payload.name
+    topology.description = payload.description
+    topology.nodes = [node.model_dump() for node in payload.nodes]
+    topology.links = [link.model_dump() for link in payload.links]
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=409, detail="A topology with this name exists"
+        ) from exc
+    session.refresh(topology)
+    return serialize_topology(topology)
+
+
+@router.delete("/{topology_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_topology(topology_id: str, session: Session = Depends(get_session)) -> Response:
+    """Delete one saved topology."""
+    topology = session.get(Topology, topology_id)
+    if topology is None:
+        raise HTTPException(status_code=404, detail="Topology not found")
+    session.delete(topology)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

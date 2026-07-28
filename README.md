@@ -1,53 +1,55 @@
 # QSecNet
 
-**QSecNet** is an open-source, research-oriented platform for analysing the
-security posture of quantum communication networks. It models network
-topologies, BB84 key distribution, adversarial conditions, and actionable
-security recommendations through a typed FastAPI service and web dashboard.
+**QSecNet** is an open-source, research-oriented platform for analysing quantum
+network security. The frontend consumes a FastAPI backend exposed at
+`http://localhost:8000/api/v1`.
 
-## Current capabilities
+## Backend capabilities
 
-- FastAPI service with OpenAPI documentation at `/docs`
-- Configurable runtime settings and health endpoint
-- Topology builder API with NetworkX graph validation and SQLite persistence
-- Reproducible BB84 protocol simulation with intercept-resend, channel-noise,
-  photon-loss, node-failure, and link-failure attack models
-- Security scoring for QBER, fidelity, reliability, connectivity, weak links,
-  key-rate estimates, risk levels, and prioritized remediation advice
-- Foundation for topology, simulation, attacks, analysis, reports, and IBM
-  Quantum Runtime comparison
-- Automated linting and tests in GitHub Actions
-
-## Architecture
-
-```text
-React dashboard -> FastAPI API -> domain services -> SQLite / Qiskit / IBM Runtime
-```
-
-See the detailed [architecture](docs/architecture.md) and [API guide](docs/api.md).
+- `GET /api/v1/health` readiness + runtime configuration summary
+- Topology CRUD + graph validation (`/api/v1/topologies`)
+- BB84 simulation with composable attacks (`/api/v1/simulations/bb84`)
+- Persisted simulations, attacks, analyses, recommendations, and reports
+- Security analysis metrics and ranked recommendations
+- Report generation and export (`json` / `csv`)
+- Optional IBM Quantum adapter (`/api/v1/ibm/compare`) with safe disabled mode
 
 ## Quick start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e '.[dev,quantum]'
+pip install -e '.[dev]'
+# Optional local Aer/IBM support:
+# pip install -e '.[dev,quantum,ibm]'
 uvicorn backend.main:app --reload
 ```
 
-Open `http://localhost:8000/docs` and run `pytest` to verify the installation.
+OpenAPI docs: `http://localhost:8000/docs`
 
-For the dashboard, run `cd frontend && npm install && npm run dev`. It expects the
-API at `http://localhost:8000/api/v1`; override this with `VITE_API_URL`.
+Run tests:
 
-## Roadmap
+```bash
+pytest
+```
 
-1. BB84 simulation and attack models
-3. Security analysis, recommendations, exports, and reports
-4. React dashboard and IBM Quantum Runtime comparison
+Frontend:
 
-## Screenshots
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Dashboard screenshots will be added as the frontend is implemented.
+## Environment variables
+
+- `QSECNET_API_PREFIX` (default `/api/v1`)
+- `QSECNET_DATABASE_URL` (default `sqlite:///./qsecnet.db`)
+- `QSECNET_CORS_ORIGINS` (default `http://localhost:5173`)
+- `QSECNET_ENABLE_IBM` (`true`/`false`, default `false`)
+- `QSECNET_IBM_TOKEN` (required only when IBM integration is enabled)
+
+When IBM is disabled or credentials are missing, IBM endpoints return a clean
+unavailable response instead of failing.
 
 ## License
 
