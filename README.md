@@ -34,6 +34,9 @@ uvicorn backend.main:app --reload
 
 Open `http://localhost:8000/docs` and run `pytest` to verify the installation.
 
+For the dashboard, run `cd frontend && npm install && npm run dev`. It expects the
+API at `http://localhost:8000/api/v1`; override this with `VITE_API_URL`.
+
 ## Roadmap
 
 1. BB84 simulation and attack models
