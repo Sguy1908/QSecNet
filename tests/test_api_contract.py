@@ -13,7 +13,6 @@ from backend.models.records import (
 )
 from backend.models.topology import Topology
 
-
 client = TestClient(app)
 
 
