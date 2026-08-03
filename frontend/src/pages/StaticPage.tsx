@@ -1,0 +1,6 @@
+import { BookOpen, Settings2 } from "lucide-react";
+
+export function StaticPage({ kind }: { kind: "settings" | "about" | "attacks" }) {
+  const content = kind === "settings" ? { icon: <Settings2 />, eyebrow: "WORKSPACE CONFIGURATION", title: "Settings", body: "Runtime settings are managed by the QSecNet API environment. Configure database, IBM Runtime, and CORS values through your deployment environment." } : kind === "attacks" ? { icon: <Settings2 />, eyebrow: "THREAT MODELING", title: "Attack analysis", body: "Run attacks from a completed simulation to compare intercept-resend, noise, photon loss, node failure, and link failure impacts." } : { icon: <BookOpen />, eyebrow: "RESEARCH PLATFORM", title: "About QSecNet", body: "QSecNet combines quantum protocol simulation, network topology analysis, modular attack models, and explainable security recommendations for research teams." };
+  return <section className="page-stack"><div className="page-title"><div className="eyebrow">{content.eyebrow}</div><h1>{content.title}</h1><p className="subtitle">Backend-owned controls and research context.</p></div><div className="panel static-card">{content.icon}<h2>{content.title}</h2><p>{content.body}</p></div></section>;
+}

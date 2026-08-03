@@ -1,29 +1,28 @@
-import { AlertTriangle, ArrowUpRight, CheckCircle2, CircleHelp, Loader2, Plus, RefreshCw, Shield } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { Sidebar, type Page } from "./components/Sidebar";
 import { useDashboard } from "./hooks/useDashboard";
-import { Sidebar } from "./components/Sidebar";
-import { MetricCard } from "./components/MetricCard";
-import { TrendChart } from "./components/TrendChart";
+import { HomePage } from "./pages/HomePage";
+import { NetworkBuilderPage } from "./pages/NetworkBuilderPage";
+import { ReportsPage } from "./pages/ReportsPage";
+import { SimulationPage } from "./pages/SimulationPage";
+import { StaticPage } from "./pages/StaticPage";
 import { api } from "./services/api";
 
 function App() {
   const dashboard = useDashboard();
-  const report = dashboard.report;
-  const score = report?.security_score ?? 0;
-  const risk = report?.risk_level ?? "pending";
-
+  const [activePage, setActivePage] = useState<Page>("overview");
   async function createWorkspace() {
-    const project = await api.createProject(`Network study ${new Date().toLocaleDateString()}`);
-    await dashboard.refresh();
-    await dashboard.runAssessment(project.id);
+    try {
+      const project = await api.createProject(`Network study ${new Date().toLocaleDateString()}`);
+      await dashboard.refresh();
+      await dashboard.runAssessment(project.id);
+    } catch {
+      // Hook owns and displays request errors.
+    }
   }
-
-  return <div className="app-shell"><Sidebar /><main className="main-content"><header className="topbar"><div><div className="eyebrow">SECURITY CONSOLE / OVERVIEW</div><h1>Quantum network posture</h1><p className="subtitle">Monitor protocol integrity, channel health, and threat exposure in one place.</p></div><div className="topbar-actions"><button className="icon-button" onClick={() => void dashboard.refresh()} title="Refresh"><RefreshCw size={17} /></button><button className="button primary" onClick={() => void createWorkspace()}><Plus size={17} />New assessment</button></div></header>
-      {dashboard.error && <div className="error-banner"><AlertTriangle size={17} />{dashboard.error}<button onClick={() => void dashboard.refresh()}>Retry</button></div>}
-      <section className="hero-grid"><div className="score-card"><div className="card-topline"><span>SECURITY SCORE</span><span className={`status-pill ${risk}`}>{risk}</span></div><div className="score-main"><div className="score-ring" style={{ "--score": `${score * 3.6}deg` } as React.CSSProperties}><div><strong>{score ? Math.round(score) : "—"}</strong><small>/100</small></div></div><div><h2>{score >= 80 ? "Network is resilient" : score ? "Attention required" : "Awaiting assessment"}</h2><p>{score ? "Your latest report combines QBER, fidelity, reliability, and connectivity." : "Create a workspace to run the first BB84 security assessment."}</p></div></div><div className="score-footer"><span><CheckCircle2 size={15} /> Last evaluated just now</span><a href="#reports">View report <ArrowUpRight size={14} /></a></div></div><div className="signal-card"><div className="card-topline"><span>LIVE SIGNAL</span><span className="live-dot">● operational</span></div><div className="signal-title"><span className="signal-wave">∿</span><div><strong>Quantum channel</strong><small>BB84 link monitoring</small></div></div><TrendChart /><div className="chart-legend"><span><i className="legend-dot cyan" /> QBER %</span><span><i className="legend-dot violet" /> Fidelity %</span><span className="chart-time">Last 7 hours</span></div></div></section>
-      <div className="section-heading"><div><div className="eyebrow">LATEST TELEMETRY</div><h2>Network indicators</h2></div><span className="updated"><span className="pulse" />Auto-refresh enabled</span></div>
-      <section className="metrics-grid"><MetricCard label="QBER" value={report ? `${(report.metrics.qber * 100).toFixed(1)}%` : "—"} hint="BB84 error rate" tone="cyan" /><MetricCard label="AVG. FIDELITY" value={report ? `${(report.metrics.average_fidelity * 100).toFixed(1)}%` : "—"} hint="Channel quality" tone="violet" /><MetricCard label="RELIABILITY" value={report ? `${(report.metrics.reliability * 100).toFixed(1)}%` : "—"} hint="End-to-end delivery" tone="green" /><MetricCard label="KEY RATE" value={report ? report.metrics.estimated_key_rate.toFixed(3) : "—"} hint="Secure fraction / bit" tone="amber" /></section>
-      <section className="lower-grid"><div className="panel" id="reports"><div className="panel-heading"><div><h3>Active projects</h3><p>API-backed research workspaces</p></div><span className="count-badge">{dashboard.projects.length}</span></div>{dashboard.loading && <div className="loading"><Loader2 className="spin" size={18} />Loading network data…</div>}{!dashboard.loading && dashboard.projects.length === 0 && <div className="empty-state"><CircleHelp size={25} /><b>No projects yet</b><span>Create an assessment to start collecting security telemetry.</span><button className="button secondary" onClick={() => void createWorkspace()}>Create workspace</button></div>}{dashboard.projects.map(project => <div className="project-row" key={project.id}><span className="project-icon"><Shield size={17} /></span><div><b>{project.name}</b><small>{new Date(project.updated_at).toLocaleString()}</small></div><button className="row-action" onClick={() => void dashboard.runAssessment(project.id)}>Run assessment <ArrowUpRight size={14} /></button></div>)}</div><div className="panel recommendations"><div className="panel-heading"><div><h3>Recommended actions</h3><p>Generated by the analyzer</p></div><span className="count-badge amber-badge">{dashboard.recommendations.length}</span></div>{dashboard.recommendations.length === 0 ? <div className="empty-mini">Run an assessment to receive prioritized mitigations.</div> : dashboard.recommendations.map(item => <div className="recommendation" key={item.id}><span className={`priority ${item.priority}`} /><div><b>{item.title}</b><p>{item.description}</p></div></div>)}</div></section>
-    </main></div>;
+  const content = activePage === "overview" ? <HomePage {...dashboard} onCreate={() => void createWorkspace()} onAssess={(id) => void dashboard.runAssessment(id)} onRefresh={() => void dashboard.refresh()} /> : activePage === "builder" ? <NetworkBuilderPage projects={dashboard.projects} onCreated={() => void dashboard.refresh()} /> : activePage === "simulations" ? <SimulationPage projects={dashboard.projects} simulation={dashboard.simulation} report={dashboard.report} onAssess={(id) => void dashboard.runAssessment(id)} /> : activePage === "reports" ? <ReportsPage report={dashboard.report} recommendations={dashboard.recommendations} /> : <StaticPage kind={activePage === "settings" ? "settings" : activePage === "attacks" ? "attacks" : "about"} />;
+  return <div className="app-shell"><Sidebar activePage={activePage} onNavigate={setActivePage} /><main className="main-content">{dashboard.error && <div className="error-banner"><AlertTriangle size={17} />{dashboard.error}<button onClick={() => void dashboard.refresh()}>Retry</button></div>}{content}</main></div>;
 }
 
 export default App;

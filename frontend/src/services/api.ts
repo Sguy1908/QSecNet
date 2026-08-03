@@ -21,6 +21,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ name }),
     }),
+  createTopology: (projectId: string, name: string) =>
+    request<{ id: string; name: string; project_id: string }>(
+      `/api/v1/projects/${projectId}/topologies`,
+      { method: "POST", body: JSON.stringify({ name }) },
+    ),
+  createNode: (topologyId: string, name: string, nodeType = "repeater") =>
+    request<{ id: string; name: string }>(`/api/v1/topologies/${topologyId}/nodes`, {
+      method: "POST",
+      body: JSON.stringify({ name, node_type: nodeType }),
+    }),
   simulations: (projectId: string, bits = 256) =>
     request<Simulation>(`/api/v1/projects/${projectId}/simulations`, {
       method: "POST",
