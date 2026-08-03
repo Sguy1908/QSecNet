@@ -20,3 +20,4 @@ The API is served with OpenAPI documentation at `/docs` and a machine-readable s
 | `POST` | `/api/v1/simulations/{simulation_id}/security-reports` | Calculate and persist a security assessment |
 | `GET` | `/api/v1/security-reports/{report_id}` | Retrieve report metrics and risk level |
 | `POST` / `GET` | `/api/v1/security-reports/{report_id}/recommendations` | Generate or retrieve mitigations |
+| `GET` | `/api/v1/security-reports/{report_id}/export/{json,csv,pdf}` | Download an assessment export |
