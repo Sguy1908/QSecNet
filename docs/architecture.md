@@ -22,3 +22,7 @@ flowchart LR
 - `utils`: shared cross-cutting concerns only.
 
 Dependencies point inward: HTTP and persistence adapt the domain; domain modules do not import FastAPI or database sessions.
+
+## Persistence
+
+SQLite is the development default. Alembic owns versioned schema changes in `migrations/`; the initial schema models projects, versioned topologies, nodes, quantum links, simulations, attacks, security reports, and recommendations.

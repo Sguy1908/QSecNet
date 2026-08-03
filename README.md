@@ -52,6 +52,12 @@ assets/      Project visual assets
 4. Full test suite and frontend dashboard
 5. IBM Quantum comparisons, CI/CD, and deployment guidance
 
+## Database migrations
+
+```bash
+alembic upgrade head
+```
+
 ## License
 
 Distributed under the [MIT License](LICENSE).
