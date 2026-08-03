@@ -16,3 +16,4 @@ The API is served with OpenAPI documentation at `/docs` and a machine-readable s
 | `GET` | `/api/v1/simulations/{simulation_id}` | Retrieve BB84 inputs, status, and metrics |
 | `GET` | `/api/v1/topologies/{topology_id}/network-analysis` | Calculate topology reliability and connectivity |
 | `POST` | `/api/v1/topologies/{topology_id}/routes` | Find an operational minimum-risk route |
+| `POST` / `GET` | `/api/v1/simulations/{simulation_id}/attacks` | Execute or retrieve modular threat results |
