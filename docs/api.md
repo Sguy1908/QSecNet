@@ -12,3 +12,5 @@ The API is served with OpenAPI documentation at `/docs` and a machine-readable s
 | `POST` / `GET` | `/api/v1/projects/{project_id}/topologies` | Create or list project topologies |
 | `POST` / `GET` | `/api/v1/topologies/{topology_id}/nodes` | Create or list network nodes |
 | `POST` | `/api/v1/topologies/{topology_id}/links` | Create a validated quantum link |
+| `POST` | `/api/v1/projects/{project_id}/simulations` | Execute and persist a BB84 run |
+| `GET` | `/api/v1/simulations/{simulation_id}` | Retrieve BB84 inputs, status, and metrics |

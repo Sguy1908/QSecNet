@@ -11,7 +11,7 @@ from backend.config import get_settings
 def create_app() -> FastAPI:
     """Create the QSecNet API application."""
     settings = get_settings()
-    logging.basicConfig(level=settings.log_level)
+    logging.basicConfig(level=getattr(settings, "log_level", "INFO"))
     app = FastAPI(
         title="QSecNet API",
         version="0.1.0",
