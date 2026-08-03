@@ -14,3 +14,5 @@ The API is served with OpenAPI documentation at `/docs` and a machine-readable s
 | `POST` | `/api/v1/topologies/{topology_id}/links` | Create a validated quantum link |
 | `POST` | `/api/v1/projects/{project_id}/simulations` | Execute and persist a BB84 run |
 | `GET` | `/api/v1/simulations/{simulation_id}` | Retrieve BB84 inputs, status, and metrics |
+| `GET` | `/api/v1/topologies/{topology_id}/network-analysis` | Calculate topology reliability and connectivity |
+| `POST` | `/api/v1/topologies/{topology_id}/routes` | Find an operational minimum-risk route |
