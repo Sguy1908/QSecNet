@@ -58,6 +58,17 @@ assets/      Project visual assets
 alembic upgrade head
 ```
 
+## IBM Quantum hardware comparisons
+
+Install the optional integration and set `QSECNET_IBM_QUANTUM_TOKEN` (and, if
+required, `QSECNET_IBM_QUANTUM_INSTANCE`). The IBM comparison endpoint runs an
+empirical prepared-state probe on the selected backend and returns its observed
+hardware error rate beside the persisted simulator QBER.
+
+```bash
+pip install -e '.[ibm]'
+```
+
 ## License
 
 Distributed under the [MIT License](LICENSE).

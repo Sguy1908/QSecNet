@@ -10,7 +10,9 @@ def test_report_exports_are_readable_and_include_metrics() -> None:
         id="report-1",
         simulation_id="sim-1",
         security_score=88.0,
-        risk_level=RiskLevel.LOW, metrics={"qber": 0.01}, created_at=datetime.now(UTC),
+        risk_level=RiskLevel.LOW,
+        metrics={"qber": 0.01},
+        created_at=datetime.now(UTC),
     )
     recommendation = SimpleNamespace(
         title="Monitor", description="Continue monitoring", priority=RiskLevel.LOW, category="monitoring"
