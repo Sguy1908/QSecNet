@@ -17,3 +17,5 @@ The API is served with OpenAPI documentation at `/docs` and a machine-readable s
 | `GET` | `/api/v1/topologies/{topology_id}/network-analysis` | Calculate topology reliability and connectivity |
 | `POST` | `/api/v1/topologies/{topology_id}/routes` | Find an operational minimum-risk route |
 | `POST` / `GET` | `/api/v1/simulations/{simulation_id}/attacks` | Execute or retrieve modular threat results |
+| `POST` | `/api/v1/simulations/{simulation_id}/security-reports` | Calculate and persist a security assessment |
+| `GET` | `/api/v1/security-reports/{report_id}` | Retrieve report metrics and risk level |
