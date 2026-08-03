@@ -15,7 +15,10 @@ def test_report_exports_are_readable_and_include_metrics() -> None:
         created_at=datetime.now(UTC),
     )
     recommendation = SimpleNamespace(
-        title="Monitor", description="Continue monitoring", priority=RiskLevel.LOW, category="monitoring"
+        title="Monitor",
+        description="Continue monitoring",
+        priority=RiskLevel.LOW,
+        category="monitoring",
     )
     document = report_document(report, [recommendation])
 

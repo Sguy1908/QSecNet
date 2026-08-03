@@ -16,4 +16,5 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -e '.[dev]'
       - run: ruff check backend tests
+      - run: python -m compileall -q backend migrations
       - run: pytest

@@ -58,6 +58,8 @@ assets/      Project visual assets
 alembic upgrade head
 ```
 
+The Docker image runs the same migration command automatically at container startup.
+
 ## IBM Quantum hardware comparisons
 
 Install the optional integration and set `QSECNET_IBM_QUANTUM_TOKEN` (and, if
