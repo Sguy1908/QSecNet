@@ -7,3 +7,8 @@ The API is served with OpenAPI documentation at `/docs` and a machine-readable s
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Service readiness and runtime environment |
+| `POST` / `GET` | `/api/v1/projects` | Create or list analysis projects |
+| `GET` / `PATCH` / `DELETE` | `/api/v1/projects/{project_id}` | Retrieve, change, or remove a project |
+| `POST` / `GET` | `/api/v1/projects/{project_id}/topologies` | Create or list project topologies |
+| `POST` / `GET` | `/api/v1/topologies/{topology_id}/nodes` | Create or list network nodes |
+| `POST` | `/api/v1/topologies/{topology_id}/links` | Create a validated quantum link |

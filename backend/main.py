@@ -4,6 +4,7 @@ import logging
 
 from fastapi import FastAPI
 
+from backend.api.router import api_router
 from backend.config import get_settings
 
 
@@ -16,6 +17,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="Quantum Network Security Analysis & Threat Assessment Platform",
     )
+    app.include_router(api_router)
 
     @app.get("/health", tags=["Operations"])
     async def health_check() -> dict[str, str]:
