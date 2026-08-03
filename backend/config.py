@@ -1,4 +1,4 @@
-"""Application configuration."""
+"""Application configuration loaded from the environment."""
 
 from functools import lru_cache
 
@@ -6,20 +6,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration loaded from environment variables."""
-
-    app_name: str = "QSecNet"
-    environment: str = "development"
-    database_url: str = "sqlite:///./qsecnet.db"
-    api_prefix: str = "/api/v1"
-    cors_origins: list[str] = ["http://localhost:5173"]
-    ibm_quantum_token: str | None = None
-    ibm_quantum_instance: str | None = None
+    """Validated runtime settings for the QSecNet API."""
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="QSECNET_")
+    environment: str = "development"
+    database_url: str = "sqlite:///./qsecnet.db"
+    log_level: str = "INFO"
+    ibm_token: str | None = None
+    ibm_instance: str | None = None
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return a cached settings instance."""
+    """Return the process-wide settings instance."""
     return Settings()

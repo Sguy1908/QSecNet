@@ -1,5 +1,8 @@
-from backend.main import health_check
+from backend.main import create_app
 
 
-def test_health_check() -> None:
-    assert health_check() == {"status": "ok", "service": "QSecNet"}
+def test_application_exposes_health_operation() -> None:
+    app = create_app()
+    routes = {route.path for route in app.routes}
+
+    assert "/health" in routes

@@ -1,60 +1,57 @@
 # QSecNet
 
-**QSecNet** is an open-source, research-oriented platform for analysing the
-security posture of quantum communication networks. It models network
-topologies, BB84 key distribution, adversarial conditions, and actionable
-security recommendations through a typed FastAPI service and web dashboard.
+QSecNet is an open-source, research-oriented platform for assessing the security posture of quantum communication networks. It combines topology modelling, BB84 simulation, modular threat injection, security analysis, and actionable recommendations.
 
-## Current capabilities
+> Status: actively being built backend-first. The frontend will be introduced only after the API contract and backend test suite are complete.
 
-- FastAPI service with OpenAPI documentation at `/docs`
-- Configurable runtime settings and health endpoint
-- Topology builder API with NetworkX graph validation and SQLite persistence
-- Reproducible BB84 protocol simulation with intercept-resend, channel-noise,
-  photon-loss, node-failure, and link-failure attack models
-- Security scoring for QBER, fidelity, reliability, connectivity, weak links,
-  key-rate estimates, risk levels, and prioritized remediation advice
-- Foundation for topology, simulation, attacks, analysis, reports, and IBM
-  Quantum Runtime comparison
-- Automated linting and tests in GitHub Actions
+## Planned capabilities
+
+- Design and persist quantum network topologies.
+- Simulate BB84 key distribution with Qiskit Aer and optional IBM Quantum runs.
+- Model intercept-resend, channel noise, photon loss, node failure, and link failure.
+- Calculate QBER, fidelity, key rate, reliability, connectivity, and risk scores.
+- Produce exportable security reports and a React/TypeScript visualization dashboard.
 
 ## Architecture
 
-```text
-React dashboard -> FastAPI API -> domain services -> SQLite / Qiskit / IBM Runtime
-```
-
-See the detailed [architecture](docs/architecture.md) and [API guide](docs/api.md).
+The FastAPI service owns all business logic. It coordinates the quantum, network, attack, analysis, recommendation, and persistence layers through typed API schemas. The future React client will consume this public API only. See [docs/architecture.md](docs/architecture.md) for details.
 
 ## Quick start
 
+Requires Python 3.11+.
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e '.[dev,quantum]'
+python -m venv .venv
+source .venv/bin/activate
+pip install -e '.[dev]'
 uvicorn backend.main:app --reload
 ```
 
-Open `http://localhost:8000/docs` and run `pytest` to verify the installation.
+Open <http://127.0.0.1:8000/docs> for interactive OpenAPI documentation.
 
-For the dashboard, run `cd frontend && npm install && npm run dev`. It expects the
-API at `http://localhost:8000/api/v1`; override this with `VITE_API_URL`.
+```bash
+pytest
+ruff check backend tests
+```
 
-### Optional IBM Quantum Runtime
+## Repository layout
 
-Set `QSECNET_IBM_QUANTUM_TOKEN` (and optionally `QSECNET_IBM_QUANTUM_INSTANCE`)
-to enable `/api/v1/ibm/compare`. Without these values, QSecNet safely performs
-only the local Qiskit Aer comparison.
+```text
+backend/     FastAPI application and domain modules
+tests/       Unit and integration tests
+docs/        Architecture, API, and research documentation
+examples/    Reproducible experiment examples
+assets/      Project visual assets
+```
 
 ## Roadmap
 
-1. BB84 simulation and attack models
-3. Security analysis, recommendations, exports, and reports
-4. React dashboard and IBM Quantum Runtime comparison
-
-## Screenshots
-
-Dashboard screenshots will be added as the frontend is implemented.
+1. Database schema and migrations
+2. Validated CRUD API
+3. BB84, topology, attack, analysis, and recommendation engines
+4. Full test suite and frontend dashboard
+5. IBM Quantum comparisons, CI/CD, and deployment guidance
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Distributed under the [MIT License](LICENSE).
