@@ -1,3 +1,4 @@
+import type React from "react";
 import { ArrowUpRight, CheckCircle2, CircleHelp, Loader2, Plus, RefreshCw, Shield } from "lucide-react";
 import type { Project, Recommendation, SecurityReport } from "../types/api";
 import { MetricCard } from "../components/MetricCard";
