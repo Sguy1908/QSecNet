@@ -105,7 +105,7 @@ def simulate_bb84(
         key_length=sifted_count,
         sifted_bits=sifted_count,
         qber=qber,
-        success_probability=1 - qber,
+        success_probability=sifted_count / requested_bits,
         estimated_key_rate=(sifted_count / requested_bits) * secret_fraction,
         execution_mode=execution_mode,
         eavesdropper_detected=qber > 0.11,
