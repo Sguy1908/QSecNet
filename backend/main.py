@@ -40,12 +40,21 @@ def create_app() -> FastAPI:
     """Create the QSecNet API application."""
     settings = get_settings()
     configure_logging(getattr(settings, "log_level", "INFO"))
+    from fastapi.middleware.cors import CORSMiddleware
+
     app = FastAPI(
         title="QSecNet API",
         version="0.1.0",
         description="Quantum Network Security Analysis & Threat Assessment Platform",
     )
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(api_router)
     install_exception_handlers(app)
 
