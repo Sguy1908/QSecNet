@@ -62,9 +62,14 @@ def run_simulation(
         result = simulate_bb84(
             payload.requested_bits, execution_mode=payload.execution_mode, seed=payload.seed
         )
-    except Exception as error:
+    except ValueError as error:
         simulation.status = SimulationStatus.FAILED
         simulation.error_message = str(error)
+        session.commit()
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        simulation.status = SimulationStatus.FAILED
+        simulation.error_message = "BB84 simulation execution failed."
         session.commit()
         raise HTTPException(status_code=500, detail="BB84 simulation execution failed.") from error
 
