@@ -1,5 +1,6 @@
 # QSecNet
 
+<<<<<<< HEAD
 QSecNet is an open-source, research-oriented platform for assessing the security posture of quantum communication networks. It combines topology modelling, BB84 simulation, modular threat injection, security analysis, and actionable recommendations.
 
 > Status: actively being built backend-first. The frontend will be introduced only after the API contract and backend test suite are complete.
@@ -15,12 +16,28 @@ QSecNet is an open-source, research-oriented platform for assessing the security
 ## Architecture
 
 The FastAPI service owns all business logic. It coordinates the quantum, network, attack, analysis, recommendation, and persistence layers through typed API schemas. The future React client will consume this public API only. See [docs/architecture.md](docs/architecture.md) for details.
+=======
+**QSecNet** is an open-source, research-oriented platform for analysing quantum
+network security. The frontend consumes a FastAPI backend exposed at
+`http://localhost:8000/api/v1`.
+
+## Backend capabilities
+
+- `GET /api/v1/health` readiness + runtime configuration summary
+- Topology CRUD + graph validation (`/api/v1/topologies`)
+- BB84 simulation with composable attacks (`/api/v1/simulations/bb84`)
+- Persisted simulations, attacks, analyses, recommendations, and reports
+- Security analysis metrics and ranked recommendations
+- Report generation and export (`json` / `csv`)
+- Optional IBM Quantum adapter (`/api/v1/ibm/compare`) with safe disabled mode
+>>>>>>> origin/main
 
 ## Quick start
 
 Requires Python 3.11+.
 
 ```bash
+<<<<<<< HEAD
 python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
@@ -43,9 +60,24 @@ docs/        Architecture, API, and research documentation
 examples/    Reproducible experiment examples
 assets/      Project visual assets
 ```
+=======
+python -m venv .venv && source .venv/bin/activate
+pip install -e '.[dev]'
+# Optional local Aer/IBM support:
+# pip install -e '.[dev,quantum,ibm]'
+uvicorn backend.main:app --reload
+```
 
-## Roadmap
+OpenAPI docs: `http://localhost:8000/docs`
 
+Run tests:
+>>>>>>> origin/main
+
+```bash
+pytest
+```
+
+<<<<<<< HEAD
 1. Database schema and migrations
 2. Validated CRUD API
 3. BB84, topology, attack, analysis, and recommendation engines
@@ -70,6 +102,26 @@ hardware error rate beside the persisted simulator QBER.
 ```bash
 pip install -e '.[ibm]'
 ```
+=======
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Environment variables
+
+- `QSECNET_API_PREFIX` (default `/api/v1`)
+- `QSECNET_DATABASE_URL` (default `sqlite:///./qsecnet.db`)
+- `QSECNET_CORS_ORIGINS` (default `http://localhost:5173`)
+- `QSECNET_ENABLE_IBM` (`true`/`false`, default `false`)
+- `QSECNET_IBM_TOKEN` (required only when IBM integration is enabled)
+
+When IBM is disabled or credentials are missing, IBM endpoints return a clean
+unavailable response instead of failing.
+>>>>>>> origin/main
 
 ## License
 

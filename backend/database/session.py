@@ -23,3 +23,14 @@ def get_session() -> Generator[Session, None, None]:
         yield session
     finally:
         session.close()
+<<<<<<< HEAD
+=======
+
+
+def initialize_database() -> None:
+    """Create tables for the local deployment."""
+    import backend.models.records  # noqa: F401
+    import backend.models.topology  # noqa: F401
+
+    Base.metadata.create_all(engine)
+>>>>>>> origin/main
