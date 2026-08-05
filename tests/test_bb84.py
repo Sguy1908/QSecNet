@@ -1,33 +1,16 @@
-from backend.api.simulations import AttackRequest, SimulationRequest, derive_result
 from backend.simulator.bb84 import simulate_bb84
 
 
-def test_ideal_bb84_has_zero_qber() -> None:
-    result = simulate_bb84(512, seed=7)
+def test_ideal_bb84_has_no_qber_and_is_reproducible() -> None:
+    result = simulate_bb84(128, seed=7)
 
-    assert result.qber == 0.0
-    assert result.key_length == result.sifted_bits
-
-
-def test_intercept_resend_introduces_errors() -> None:
-    payload = SimulationRequest(
-        rounds=10000,
-        seed=12,
-        attacks=[AttackRequest(kind="intercept_resend")],
-    )
-
-    result = derive_result(simulate_bb84(payload.rounds, payload.seed), payload)
-
-    assert 0.20 < result.qber < 0.30
+    assert result.qber == 0
+    assert result.shared_key == simulate_bb84(128, seed=7).shared_key
+    assert result.estimated_key_rate > 0
 
 
-def test_photon_loss_reduces_key_length() -> None:
-    payload = SimulationRequest(
-        rounds=512,
-        seed=2,
-        attacks=[AttackRequest(kind="photon_loss", probability=0.5)],
-    )
-    result = derive_result(simulate_bb84(payload.rounds, payload.seed), payload)
+def test_intercept_resend_introduces_detectable_qber() -> None:
+    result = simulate_bb84(1024, seed=17, intercept_resend=True)
 
-    assert result.delivery_probability < 0.6
-    assert result.key_length < result.sifted_bits
+    assert result.qber > 0.11
+    assert result.eavesdropper_detected

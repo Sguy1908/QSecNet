@@ -1,25 +1,30 @@
-"""Extensible attack protocol for quantum-channel perturbations."""
+"""Extensible interfaces and shared types for quantum-network attacks."""
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from random import Random
+from __future__ import annotations
 
-from backend.simulator.bb84 import BB84Transcript
-
-
-@dataclass(frozen=True)
-class AttackOutcome:
-    transcript: BB84Transcript
-    delivered_fraction: float = 1.0
-    affected_nodes: tuple[str, ...] = ()
-    affected_links: tuple[tuple[str, str], ...] = ()
+from dataclasses import asdict, dataclass
+from typing import Any, Protocol
 
 
-class Attack(ABC):
-    """A configurable operation applied after quantum transmission."""
+@dataclass(frozen=True, slots=True)
+class AttackResult:
+    """Measured consequences of applying one threat model."""
 
-    name: str
+    attack_type: str
+    qber: float | None
+    success_probability: float | None
+    estimated_key_rate: float | None
+    detected: bool
+    impact: dict[str, Any]
 
-    @abstractmethod
-    def apply(self, transcript: BB84Transcript, rng: Random) -> AttackOutcome:
-        """Return a potentially altered protocol transcript."""
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+class AttackModel(Protocol):
+    """Protocol every pluggable attack model must implement."""
+
+    attack_type: str
+
+    def execute(self, simulation: dict[str, Any], configuration: dict[str, Any]) -> AttackResult:
+        """Apply the attack to a completed simulation's metrics."""

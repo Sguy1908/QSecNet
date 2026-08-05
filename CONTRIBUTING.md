@@ -1,6 +1,10 @@
-# Contributing
+# Contributing to QSecNet
 
-Thank you for contributing to QSecNet. Use Python 3.11+, keep changes focused,
-add tests for behaviour changes, and run `ruff check .` and `pytest` before
-opening a pull request. Please explain assumptions and cite relevant quantum
-networking literature for changes that alter security analysis.
+Thank you for contributing. Please use Python 3.11+, keep changes focused, add or update tests for behaviour changes, and run the checks below before opening a pull request.
+
+```bash
+pytest
+ruff check backend tests
+```
+
+Use conventional, imperative commit messages such as `feat: add BB84 engine`. Do not put quantum-network business logic in the frontend; API contracts and backend tests must be established first.

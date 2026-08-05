@@ -1,11 +1,6 @@
-export function StaticPage({ title }: { title: string }) {
-  const content: Record<string, string> = {
-    Home: "Model, attack, and harden quantum communication networks from a single security workspace.",
-    "Network Builder": "Create a connected topology using endpoint, repeater, and trusted-relay nodes. Persist it through the Topologies API.",
-    "Attack Analysis": "Run intercept-resend, noise, loss, node-failure, and link-failure scenarios against BB84 transmission.",
-    "Security Report": "Calculate QBER, fidelity, key-rate, reliability, connectivity, and prioritized remediations.",
-    Settings: "Configure the API address and IBM Quantum Runtime credentials through deployment environment variables.",
-    About: "QSecNet is an open-source research platform for quantum-network threat assessment."
-  };
-  return <section><header><p className="eyebrow">QSECNET</p><h2>{title}</h2><p>{content[title]}</p></header><div className="empty">Use the sidebar to explore the QSecNet security workflow.</div></section>;
+import { BookOpen, Settings2 } from "lucide-react";
+
+export function StaticPage({ kind }: { kind: "settings" | "about" | "attacks" }) {
+  const content = kind === "settings" ? { icon: <Settings2 />, eyebrow: "WORKSPACE CONFIGURATION", title: "Settings", body: "Runtime settings are managed by the QSecNet API environment. Configure database, IBM Runtime, and CORS values through your deployment environment." } : kind === "attacks" ? { icon: <Settings2 />, eyebrow: "THREAT MODELING", title: "Attack analysis", body: "Run attacks from a completed simulation to compare intercept-resend, noise, photon loss, node failure, and link failure impacts." } : { icon: <BookOpen />, eyebrow: "RESEARCH PLATFORM", title: "About QSecNet", body: "QSecNet combines quantum protocol simulation, network topology analysis, modular attack models, and explainable security recommendations for research teams." };
+  return <section className="page-stack"><div className="page-title"><div className="eyebrow">{content.eyebrow}</div><h1>{content.title}</h1><p className="subtitle">Backend-owned controls and research context.</p></div><div className="panel static-card">{content.icon}<h2>{content.title}</h2><p>{content.body}</p></div></section>;
 }

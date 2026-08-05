@@ -1,4 +1,16 @@
-interface Props { label: string; value: string; detail?: string; }
-export function MetricCard({ label, value, detail }: Props) {
-  return <article className="card"><p>{label}</p><strong>{value}</strong>{detail && <small>{detail}</small>}</article>;
+interface MetricCardProps {
+  label: string;
+  value: string;
+  hint: string;
+  tone?: "cyan" | "violet" | "amber" | "green";
+}
+
+export function MetricCard({ label, value, hint, tone = "cyan" }: MetricCardProps) {
+  return (
+    <article className={`metric-card metric-${tone}`}>
+      <div className="metric-label">{label}</div>
+      <div className="metric-value">{value}</div>
+      <div className="metric-hint">{hint}</div>
+    </article>
+  );
 }

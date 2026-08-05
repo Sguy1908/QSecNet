@@ -1,49 +1,34 @@
-# Architecture
+# QSecNet architecture
 
-QSecNet uses a layered architecture so protocol, attack, analysis, and HTTP
-concerns remain independently testable.
+QSecNet follows a layered, backend-first architecture.
 
 ```mermaid
 flowchart LR
-  UI[React / Vite dashboard] --> API[FastAPI typed REST API]
-  API --> T[Topology service]
-  API --> S[BB84 simulation]
-  S --> A[Attack plug-ins]
-  API --> M[Security analyzer]
-  M --> R[Recommendation engine]
-  T --> DB[(SQLite / SQLAlchemy)]
-  S -. optional .-> Q[Qiskit Aer / IBM Runtime]
+    Client[Future React client] --> API[FastAPI / typed schemas]
+    API --> Services[Application services]
+    Services --> Network[NetworkX topology engine]
+    Services --> Quantum[Qiskit BB84 engine]
+    Services --> Attacks[Modular attack engine]
+    Services --> Analysis[Security analysis and recommendations]
+    Services --> DB[(SQLite / SQLAlchemy)]
+    Quantum -. optional .-> IBM[IBM Quantum Runtime]
 ```
 
-## Package responsibilities
+## Boundaries
 
-| Package | Responsibility |
-| --- | --- |
-| `backend/api` | Validation, OpenAPI schemas, and REST endpoints |
-| `backend/simulator` | BB84 protocol execution and transcript generation |
-| `backend/attacks` | Extensible channel and adversary perturbations |
-| `backend/analyzer` | QBER, graph, reliability, and score calculations |
-| `backend/recommendation_engine` | Metric-driven remediation guidance |
-| `backend/database` / `models` | SQLAlchemy persistence lifecycle and entities |
+- `api`: HTTP routing, validation, status codes, and API schemas.
+- `models` and `database`: persistence entities and database sessions.
+- `simulator`, `attacks`, `analyzer`, `recommendation_engine`: pure domain logic.
+- `utils`: shared cross-cutting concerns only.
 
-## BB84 analysis sequence
+Dependencies point inward: HTTP and persistence adapt the domain; domain modules do not import FastAPI or database sessions.
 
-```mermaid
-sequenceDiagram
-  participant U as Researcher
-  participant A as API
-  participant B as BB84 simulator
-  participant X as Attack engine
-  participant S as Security analyzer
-  U->>A: POST /simulations/bb84
-  A->>B: prepare, measure, sift bases
-  B->>X: transcript + attack configuration
-  X-->>A: altered observations and delivery rate
-  U->>A: POST /security/analyze
-  A->>S: topology + observed result
-  S-->>A: metrics, score, risk, recommendations
-```
+## Persistence
 
-The core BB84 implementation is protocol-level and deterministic for a supplied
-seed. Qiskit Aer and IBM Runtime remain optional extras because hardware access
-requires user-managed credentials and queue availability.
+SQLite is the development default. Alembic owns versioned schema changes in `migrations/`; the initial schema models projects, versioned topologies, nodes, quantum links, simulations, attacks, security reports, and recommendations.
+
+## Operational safeguards
+
+- All API requests receive an `X-Request-ID` correlation header and produce structured JSON logs.
+- Request-validation failures use FastAPI's typed `422` response; unhandled errors receive a non-sensitive `500` response with an error ID.
+- The Docker command runs `alembic upgrade head` before accepting traffic.

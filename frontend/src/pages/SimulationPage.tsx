@@ -1,14 +1,6 @@
-import { useState } from "react";
-import { MetricCard } from "../components/MetricCard";
-import { runBb84 } from "../services/api";
-import type { AttackKind, SimulationResponse } from "../types/api";
+import { Play, Radio, ShieldCheck } from "lucide-react";
+import type { Project, SecurityReport, Simulation } from "../types/api";
 
-export function SimulationPage() {
-  const [result, setResult] = useState<SimulationResponse>(); const [error, setError] = useState("");
-  async function run(attack?: AttackKind) { try { setError(""); setResult(await runBb84(2048, attack)); } catch (e) { setError(e instanceof Error ? e.message : "Unknown error"); } }
-  return <section><header><p className="eyebrow">PROTOCOL LAB</p><h2>BB84 simulation</h2><p>Measure sifted key generation and attack-induced error rates.</p></header>
-    <div className="actions"><button className="primary" onClick={() => run()}>Run ideal channel</button><button onClick={() => run("intercept_resend")}>Simulate intercept &amp; resend</button></div>
-    {error && <p className="error">{error}</p>}
-    {result && <div className="metrics"><MetricCard label="QBER" value={`${(result.qber * 100).toFixed(2)}%`} detail="Matched-basis error rate" /><MetricCard label="Shared key" value={`${result.key_length} bits`} detail={`Delivery ${(result.delivery_probability * 100).toFixed(1)}%`} /><MetricCard label="Success" value={`${(result.success_probability * 100).toFixed(1)}%`} detail="Sifting efficiency" /></div>}
-  </section>;
+export function SimulationPage({ projects, simulation, report, onAssess }: { projects: Project[]; simulation?: Simulation; report?: SecurityReport; onAssess: (id: string) => void }) {
+  return <section className="page-stack"><div className="page-title"><div><div className="eyebrow">QUANTUM EXECUTION</div><h1>BB84 simulations</h1><p className="subtitle">Run a reproducible protocol experiment through the backend simulator.</p></div></div><div className="panel simulation-panel"><div className="sim-hero"><span className="sim-icon"><Radio size={27} /></span><div><h2>Ideal channel baseline</h2><p>Analytic Qiskit-compatible BB84 execution · 256 requested bits</p></div></div><div className="project-picker"><span>Choose project</span>{projects.map(project => <button className="button secondary" key={project.id} onClick={() => onAssess(project.id)}><Play size={14} />Run on {project.name}</button>)}</div></div>{simulation?.result && <div className="metrics-grid"><div className="metric-card metric-cyan"><div className="metric-label">LAST RUN</div><div className="metric-value">{simulation.status}</div><div className="metric-hint">{simulation.result.execution_mode} execution</div></div><div className="metric-card metric-violet"><div className="metric-label">SHARED KEY</div><div className="metric-value">{simulation.result.key_length}</div><div className="metric-hint">sifted bits</div></div><div className="metric-card metric-green"><div className="metric-label">QBER</div><div className="metric-value">{(simulation.result.qber * 100).toFixed(1)}%</div><div className="metric-hint">protocol integrity</div></div><div className="metric-card metric-amber"><div className="metric-label">REPORT</div><div className="metric-value"><ShieldCheck size={24} /></div><div className="metric-hint">{report ? `${report.security_score}/100 score` : "Pending analysis"}</div></div></div>}</section>;
 }

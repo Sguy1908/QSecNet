@@ -1,23 +1,25 @@
-from backend.analyzer.security import analyze_security
-from backend.api.simulations import AttackRequest, SimulationRequest, derive_result
-from backend.api.topologies import TopologyCreate
-from backend.recommendation_engine.engine import recommend
-from backend.simulator.bb84 import simulate_bb84
+from types import SimpleNamespace
+
+from backend.analyzer.security import assess_security
+from backend.models import RiskLevel
 
 
-def test_security_analysis_flags_intercept_resend() -> None:
-    topology = TopologyCreate.model_validate(
-        {
-            "name": "network",
-            "nodes": [{"id": "a", "label": "Alice"}, {"id": "b", "label": "Bob"}],
-            "links": [{"source": "a", "target": "b", "fidelity": 0.98}],
-        }
+def test_security_assessment_uses_attack_worst_case() -> None:
+    nodes = [
+        SimpleNamespace(id="a", name="Alice", is_operational=True),
+        SimpleNamespace(id="b", name="Bob", is_operational=True),
+    ]
+    links = [
+        SimpleNamespace(
+            id="link", source_node_id="a", target_node_id="b", fidelity=0.99,
+            loss_probability=0.01, decoherence_time_us=None, is_operational=True,
+        )
+    ]
+    assessment = assess_security(
+        {"qber": 0.0, "estimated_key_rate": 0.5}, nodes, links,
+        [{"qber": 0.25, "estimated_key_rate": 0.0}],
     )
-    request = SimulationRequest(
-        rounds=5000, seed=5, attacks=[AttackRequest(kind="intercept_resend")]
-    )
-    simulation = derive_result(simulate_bb84(request.rounds, request.seed), request)
-    metrics = analyze_security(topology, simulation)
 
-    assert metrics.risk_level in {"high", "critical"}
-    assert any("eavesdropping" in item for item in recommend(metrics, simulation.attacks))
+    assert assessment.qber == 0.25
+    assert assessment.estimated_key_rate == 0.0
+    assert assessment.risk_level in {RiskLevel.HIGH, RiskLevel.CRITICAL}

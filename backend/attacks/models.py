@@ -1,74 +1,116 @@
-"""Concrete attack models supported by the simulation service."""
+"""Built-in threat models for QSecNet."""
 
-from dataclasses import dataclass
-from random import Random
+from __future__ import annotations
 
-from backend.attacks.base import Attack, AttackOutcome
-from backend.simulator.bb84 import BB84Transcript
+from typing import Any
+
+from backend.attacks.base import AttackResult
 
 
-@dataclass(frozen=True)
-class InterceptResendAttack(Attack):
-    name: str = "intercept_resend"
+def _metrics(simulation: dict[str, Any]) -> tuple[float, float, float]:
+    qber = float(simulation.get("qber", 0.0))
+    success = float(simulation.get("success_probability", 0.0))
+    key_rate = float(simulation.get("estimated_key_rate", 0.0))
+    return qber, success, key_rate
 
-    def apply(self, transcript: BB84Transcript, rng: Random) -> AttackOutcome:
-        eve_bases = [rng.randrange(2) for _ in transcript.alice_bits]
-        bob_bits = [
-            alice_bit
-            if alice_basis == eve_basis
-            else rng.randrange(2)
-            for alice_bit, alice_basis, eve_basis in zip(
-                transcript.alice_bits, transcript.alice_bases, eve_bases
-            )
-        ]
-        # Bob's measurement only preserves Eve's resend result when their bases match.
-        bob_bits = [
-            eve_bit if eve_basis == bob_basis else rng.randrange(2)
-            for eve_bit, eve_basis, bob_basis in zip(bob_bits, eve_bases, transcript.bob_bases)
-        ]
-        return AttackOutcome(
-            BB84Transcript(
-                transcript.alice_bits, transcript.alice_bases, bob_bits, transcript.bob_bases
-            )
+
+class InterceptResendAttack:
+    attack_type = "intercept_resend"
+
+    def execute(self, simulation: dict[str, Any], configuration: dict[str, Any]) -> AttackResult:
+        qber, success, key_rate = _metrics(simulation)
+        interception_rate = float(configuration.get("interception_rate", 1.0))
+        if not 0 <= interception_rate <= 1:
+            raise ValueError("interception_rate must be between 0 and 1")
+        attacked_qber = qber + (0.25 * interception_rate * (1 - 2 * qber))
+        attacked_qber = min(1.0, max(0.0, attacked_qber))
+        return AttackResult(
+            attack_type=self.attack_type,
+            qber=attacked_qber,
+            success_probability=min(success, 1 - attacked_qber),
+            estimated_key_rate=key_rate * max(0.0, 1 - 4 * interception_rate),
+            detected=attacked_qber > 0.11,
+            impact={"interception_rate": interception_rate},
         )
 
 
-@dataclass(frozen=True)
-class ChannelNoiseAttack(Attack):
-    probability: float
-    name: str = "channel_noise"
+class ChannelNoiseAttack:
+    attack_type = "channel_noise"
 
-    def apply(self, transcript: BB84Transcript, rng: Random) -> AttackOutcome:
-        bits = [bit ^ int(rng.random() < self.probability) for bit in transcript.bob_bits]
-        return AttackOutcome(
-            BB84Transcript(transcript.alice_bits, transcript.alice_bases, bits, transcript.bob_bases)
+    def execute(self, simulation: dict[str, Any], configuration: dict[str, Any]) -> AttackResult:
+        qber, success, key_rate = _metrics(simulation)
+        noise_probability = float(configuration.get("noise_probability", 0.05))
+        if not 0 <= noise_probability <= 1:
+            raise ValueError("noise_probability must be between 0 and 1")
+        attacked_qber = qber * (1 - noise_probability) + (1 - qber) * noise_probability
+        return AttackResult(
+            attack_type=self.attack_type,
+            qber=attacked_qber,
+            success_probability=min(success, 1 - attacked_qber),
+            estimated_key_rate=key_rate * max(0.0, 1 - 2 * noise_probability),
+            detected=attacked_qber > 0.11,
+            impact={"noise_probability": noise_probability},
         )
 
 
-@dataclass(frozen=True)
-class PhotonLossAttack(Attack):
-    probability: float
-    name: str = "photon_loss"
+class PhotonLossAttack:
+    attack_type = "photon_loss"
 
-    def apply(self, transcript: BB84Transcript, rng: Random) -> AttackOutcome:
-        delivered = sum(rng.random() >= self.probability for _ in transcript.alice_bits)
-        return AttackOutcome(transcript, delivered / len(transcript.alice_bits))
+    def execute(self, simulation: dict[str, Any], configuration: dict[str, Any]) -> AttackResult:
+        qber, success, key_rate = _metrics(simulation)
+        loss_probability = float(configuration.get("loss_probability", 0.1))
+        if not 0 <= loss_probability <= 1:
+            raise ValueError("loss_probability must be between 0 and 1")
+        factor = 1 - loss_probability
+        return AttackResult(
+            attack_type=self.attack_type,
+            qber=qber,
+            success_probability=success * factor,
+            estimated_key_rate=key_rate * factor,
+            detected=loss_probability > 0.2,
+            impact={"loss_probability": loss_probability},
+        )
 
 
-@dataclass(frozen=True)
-class NodeFailureAttack(Attack):
-    node_id: str
-    name: str = "node_failure"
+class NodeFailureAttack:
+    attack_type = "node_failure"
 
-    def apply(self, transcript: BB84Transcript, rng: Random) -> AttackOutcome:
-        return AttackOutcome(transcript, 0.0, affected_nodes=(self.node_id,))
+    def execute(self, simulation: dict[str, Any], configuration: dict[str, Any]) -> AttackResult:
+        qber, _, key_rate = _metrics(simulation)
+        node_id = configuration.get("node_id")
+        if not isinstance(node_id, str) or not node_id:
+            raise ValueError("node_id is required for a node_failure attack")
+        return AttackResult(
+            attack_type=self.attack_type,
+            qber=qber,
+            success_probability=0.0,
+            estimated_key_rate=0.0,
+            detected=True,
+            impact={
+                "failed_node_id": node_id,
+                "service_disruption": True,
+                "baseline_key_rate": key_rate,
+            },
+        )
 
 
-@dataclass(frozen=True)
-class LinkFailureAttack(Attack):
-    source: str
-    target: str
-    name: str = "link_failure"
+class LinkFailureAttack:
+    attack_type = "link_failure"
 
-    def apply(self, transcript: BB84Transcript, rng: Random) -> AttackOutcome:
-        return AttackOutcome(transcript, 0.0, affected_links=((self.source, self.target),))
+    def execute(self, simulation: dict[str, Any], configuration: dict[str, Any]) -> AttackResult:
+        qber, _, key_rate = _metrics(simulation)
+        link_id = configuration.get("link_id")
+        if not isinstance(link_id, str) or not link_id:
+            raise ValueError("link_id is required for a link_failure attack")
+        return AttackResult(
+            attack_type=self.attack_type,
+            qber=qber,
+            success_probability=0.0,
+            estimated_key_rate=0.0,
+            detected=True,
+            impact={
+                "failed_link_id": link_id,
+                "service_disruption": True,
+                "baseline_key_rate": key_rate,
+            },
+        )

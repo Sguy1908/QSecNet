@@ -1,9 +1,11 @@
 # Changelog
 
-All notable changes to QSecNet are documented here.
+All notable changes to QSecNet are documented in this file.
 
-## [0.1.0] - 2026-07-28
+## [Unreleased]
+
+## [0.1.0] - 2026-08-03
 
 ### Added
 
-- Initial backend service, packaging, CI, and project documentation.
+- Initial backend-first project scaffold, quality tooling, container image, and API entry point.

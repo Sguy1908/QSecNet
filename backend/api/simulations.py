@@ -1,5 +1,16 @@
-"""BB84 simulation and attack analysis endpoints."""
+"""Simulation execution and result retrieval endpoints."""
 
+<<<<<<< HEAD
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.orm import Session
+
+from backend.database import get_session
+from backend.models import Project, Simulation, SimulationStatus, Topology
+from backend.simulator.bb84 import simulate_bb84
+=======
 from datetime import datetime
 from enum import StrEnum
 from random import Random
@@ -13,39 +24,87 @@ from backend.database.session import get_session
 from backend.models.records import AttackRecord, SimulationRecord
 from backend.services.bb84_service import run_bb84
 from backend.simulator.bb84 import BB84Result
+>>>>>>> origin/main
 
-router = APIRouter(prefix="/simulations", tags=["simulations"])
-
-
-class AttackKind(StrEnum):
-    INTERCEPT_RESEND = "intercept_resend"
-    CHANNEL_NOISE = "channel_noise"
-    PHOTON_LOSS = "photon_loss"
-    NODE_FAILURE = "node_failure"
-    LINK_FAILURE = "link_failure"
+router = APIRouter(tags=["Simulations"])
 
 
-class AttackRequest(BaseModel):
-    kind: AttackKind
-    probability: float | None = Field(default=None, ge=0.0, le=1.0)
-    node_id: str | None = None
-    source: str | None = None
-    target: str | None = None
-
-    @model_validator(mode="after")
-    def require_attack_parameters(self) -> "AttackRequest":
-        if self.kind in {AttackKind.CHANNEL_NOISE, AttackKind.PHOTON_LOSS} and self.probability is None:
-            raise ValueError("probability is required for this attack")
-        if self.kind is AttackKind.NODE_FAILURE and not self.node_id:
-            raise ValueError("node_id is required for node failure")
-        if self.kind is AttackKind.LINK_FAILURE and not (self.source and self.target):
-            raise ValueError("source and target are required for link failure")
-        return self
-
-
-class SimulationRequest(BaseModel):
-    rounds: int = Field(default=1024, ge=16, le=1_000_000)
+class SimulationCreate(BaseModel):
+    topology_id: str | None = None
+    requested_bits: int = Field(default=256, ge=1, le=4096)
+    execution_mode: Literal["analytic", "aer"] = "analytic"
     seed: int | None = None
+<<<<<<< HEAD
+
+
+class SimulationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    project_id: str
+    topology_id: str | None
+    protocol: str
+    status: SimulationStatus
+    requested_bits: int
+    configuration: dict[str, object]
+    result: dict[str, object] | None
+    error_message: str | None
+
+
+@router.post(
+    "/projects/{project_id}/simulations",
+    response_model=SimulationRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def run_simulation(
+    project_id: str, payload: SimulationCreate, session: Session = Depends(get_session)
+) -> Simulation:
+    """Execute BB84 and persist its reproducible inputs and outputs."""
+    if session.get(Project, project_id) is None:
+        raise HTTPException(status_code=404, detail=f"Project '{project_id}' was not found.")
+    if payload.topology_id is not None:
+        topology = session.get(Topology, payload.topology_id)
+        if topology is None or topology.project_id != project_id:
+            raise HTTPException(status_code=422, detail="Topology must belong to the project.")
+
+    simulation = Simulation(
+        project_id=project_id,
+        topology_id=payload.topology_id,
+        requested_bits=payload.requested_bits,
+        status=SimulationStatus.RUNNING,
+        configuration=payload.model_dump(exclude={"seed"}) | {"seed": payload.seed},
+    )
+    session.add(simulation)
+    try:
+        result = simulate_bb84(
+            payload.requested_bits, execution_mode=payload.execution_mode, seed=payload.seed
+        )
+    except ValueError as error:
+        simulation.status = SimulationStatus.FAILED
+        simulation.error_message = str(error)
+        session.commit()
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        simulation.status = SimulationStatus.FAILED
+        simulation.error_message = "BB84 simulation execution failed."
+        session.commit()
+        raise HTTPException(status_code=500, detail="BB84 simulation execution failed.") from error
+
+    simulation.status = SimulationStatus.COMPLETED
+    simulation.result = result.as_dict()
+    session.commit()
+    session.refresh(simulation)
+    return simulation
+
+
+@router.get("/simulations/{simulation_id}", response_model=SimulationRead)
+def get_simulation(simulation_id: str, session: Session = Depends(get_session)) -> Simulation:
+    """Retrieve a persisted simulation and its BB84 metrics."""
+    simulation = session.get(Simulation, simulation_id)
+    if simulation is None:
+        raise HTTPException(status_code=404, detail=f"Simulation '{simulation_id}' was not found.")
+    return simulation
+=======
     topology_id: str | None = None
     attacks: list[AttackRequest] = Field(default_factory=list)
 
@@ -221,3 +280,4 @@ def get_attack_summary(simulation_id: str, session: Session = Depends(get_sessio
         "attacks": attack.summary.get("attacks", []),
         "summary": attack.summary,
     }
+>>>>>>> origin/main

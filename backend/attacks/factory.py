@@ -1,6 +1,6 @@
-"""Validation-aware factory for concrete attack implementations."""
+"""Registry for attack implementations."""
 
-from backend.attacks.base import Attack
+from backend.attacks.base import AttackModel
 from backend.attacks.models import (
     ChannelNoiseAttack,
     InterceptResendAttack,
@@ -9,16 +9,24 @@ from backend.attacks.models import (
     PhotonLossAttack,
 )
 
+ATTACKS: dict[str, AttackModel] = {
+    attack.attack_type: attack
+    for attack in (
+        InterceptResendAttack(),
+        ChannelNoiseAttack(),
+        PhotonLossAttack(),
+        NodeFailureAttack(),
+        LinkFailureAttack(),
+    )
+}
 
-def build_attack(request: object) -> Attack:
-    """Create an attack from its API representation."""
-    kind = getattr(request, "kind")
-    if kind == "intercept_resend":
-        return InterceptResendAttack()
-    if kind == "channel_noise":
-        return ChannelNoiseAttack(getattr(request, "probability") or 0.0)
-    if kind == "photon_loss":
-        return PhotonLossAttack(getattr(request, "probability") or 0.0)
-    if kind == "node_failure":
-        return NodeFailureAttack(getattr(request, "node_id") or "")
-    return LinkFailureAttack(getattr(request, "source") or "", getattr(request, "target") or "")
+
+def get_attack(attack_type: str) -> AttackModel:
+    """Retrieve a registered attack implementation by its public name."""
+    try:
+        return ATTACKS[attack_type]
+    except KeyError as error:
+        supported = ", ".join(sorted(ATTACKS))
+        raise ValueError(
+            f"Unsupported attack type '{attack_type}'. Supported: {supported}."
+        ) from error
